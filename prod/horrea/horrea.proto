@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package horrea;
+
+option go_package = "github.com/pleb/prod/horrea";
+
+import "google/protobuf/empty.proto";
+
+service Horrea {
+    // generic put/get
+    rpc PutContent(stream PutContentReq) returns (google.protobuf.Empty) {}
+    rpc GetContent(GetContentReq) returns (stream Chunk) {}
+
+    // structured put/get, internal lookup
+    rpc PutStructured(stream PutStructuredReq) returns (google.protobuf.Empty) {}
+    rpc GetStructured(GetStructuredReq) returns (stream Chunk) {}
+}
+
+message Chunk {
+    bytes data = 1;
+}
+enum BlobType {
+    Tool    = 0;
+    Input   = 1;
+    Output  = 2;
+}
+
+// unstructured PUT/GET
+message GetContentReq {
+    string bucket = 1;
+    string key = 2;
+}
+message PutContentReq {
+    string bucket = 1;
+    string key = 2;
+    Chunk  chunk = 3;
+}
+
+// structured PUT/GET
+message PutStructuredReq {
+    BlobType    type = 1;
+    string      major = 2;
+    string      minor = 3;
+    Chunk       chunk = 4;
+}
+message GetStructuredReq {
+    BlobType    type = 1;
+    string      major = 2;
+    string      minor = 3;
+}
