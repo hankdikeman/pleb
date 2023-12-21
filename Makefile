@@ -1,4 +1,5 @@
-BINDIR := ./bin
+ROOTDIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+BINDIR := $(ROOTDIR)/prod/bin
 
 PROTOC := protoc --go_out=./ --go_opt=paths=source_relative
 GRPC-PROTOC := $(PROTOC) --go-grpc_out=./ --go-grpc_opt=paths=source_relative
@@ -36,3 +37,4 @@ format:
 .PHONY: clean
 clean:
 	find . -name *.pb.go -delete
+	rm $(BINDIR)/*
