@@ -1,0 +1,4 @@
+# ignore generate protobuffer files
+**/*.pb.go
+# ignore any built binaries
+**/bin/*
