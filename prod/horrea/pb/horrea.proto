@@ -7,30 +7,43 @@ option go_package = "github.com/pleb/prod/horrea/pb";
 import "google/protobuf/empty.proto";
 
 service Horrea {
-    // typed PUT/GET. Type-agnostic
+    // streamed S3 PUT. No return statement
     rpc PutContent(stream PutContentReq) returns (google.protobuf.Empty) {}
+
+    // streamed S3 GET.
     rpc GetContent(GetContentReq) returns (stream Chunk) {}
 }
 
+// Data carrier.
 message Chunk {
     bytes data = 1;
 }
+
+// Data blob type.
 enum BlobType {
-    Raw     = 0;
-    Tool    = 1;
-    Input   = 2;
-    Output  = 3;
+    Raw     = 0;    // Raw data blob.
+    Tool    = 1;    // Job tooling.
+    Input   = 2;    // Job inputs.
+    Output  = 3;    // Job outputs.
 }
 
-// structured PUT/GET
-message PutContentReq {
-    BlobType    type = 1;
-    string      major = 2;
-    string      minor = 3;
-    Chunk       chunk = 4;
+// Data blob attributes.
+message BlobInfo {
+    BlobType    blobType = 1;   // Blob type.
+    int64       size = 2;       // Blob size in bytes.
+    string      major = 3;      // Major key string.
+    string      minor = 4;      // Minor key string.
 }
+
+// structured PUT
+message PutContentReq {
+    oneof input {
+        BlobInfo    info = 1;   // Blob attributes. First message.
+        Chunk       chunk = 2;  // Data chunk. Subsequent messages.
+    }
+}
+
+// structured GET
 message GetContentReq {
-    BlobType    type = 1;
-    string      major = 2;
-    string      minor = 3;
+    BlobInfo    info = 1;   // Blob attributes.
 }

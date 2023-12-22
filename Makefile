@@ -37,4 +37,4 @@ format:
 .PHONY: clean
 clean:
 	find . -name *.pb.go -delete
-	rm $(BINDIR)/*
+	rm -f $(BINDIR)/*

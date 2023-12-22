@@ -5,6 +5,8 @@
 /*
  * Serves as a frontend to manage access to S3 object storage
  * for data not suitable for storage in typical KV store.
+ * Can also be configured in file mode, where data is stored
+ * as files on the local machine rather than at a third-party.
  *
  * Consumers:
  *    Pleb      - reads inputs, pushes outputs
@@ -37,15 +39,58 @@ var (
 	port = flag.Int("port", 50444, "The server port")
 )
 
+func blobInfoToString(info *pb.BlobInfo) string {
+	return fmt.Sprintf("%s:%s, %s, %d bytes", info.Major, info.Minor, info.BlobType.String(), info.Size)
+}
+
 // shared PUT API, with streamed input and type specified by request.
 func (s *server) PutContent(stream pb.Horrea_PutContentServer) error {
-	log.Printf("Request to put content.")
+	// initial message provides message attributes
+	in, err := stream.Recv()
+	if err != nil {
+		return err
+	}
+	info := in.GetInfo()
+
+	// create buffer of specified size. TODO wrap in struct
+	// data := make([]byte, 0, info.Size)
+
+	// pass stream to type-specific PUT
+	log.Printf("Request to put BLOB %s", blobInfoToString(info))
+	switch blobType := info.BlobType; blobType {
+	case pb.BlobType_Raw:
+		log.Print("No-op RAW put")
+	case pb.BlobType_Tool:
+		log.Print("No-op TOOL put")
+	case pb.BlobType_Input:
+		log.Print("No-op INPUT put")
+	case pb.BlobType_Output:
+		log.Print("No-op OUTPUT put")
+	default:
+		return fmt.Errorf("BlobType %d not supported", info.BlobType)
+	}
 	return nil
 }
 
 // shared GET API, with streamed output and type-specified request.
 func (s *server) GetContent(in *pb.GetContentReq, stream pb.Horrea_GetContentServer) error {
-	log.Printf("Request to stream content for req %v", in)
+	// create buffer of specified size. TODO wrap in struct
+	// data := make([]byte, 0, in.Info.Size)
+
+	// pass stream to type-specific GET
+	log.Printf("Request to get BLOB %s", blobInfoToString(in.Info))
+	switch blobType := in.Info.BlobType; blobType {
+	case pb.BlobType_Raw:
+		log.Print("No-op RAW get")
+	case pb.BlobType_Tool:
+		log.Print("No-op TOOL get")
+	case pb.BlobType_Input:
+		log.Print("No-op INPUT get")
+	case pb.BlobType_Output:
+		log.Print("No-op OUTPUT get")
+	default:
+		return fmt.Errorf("BlobType %d not supported", in.Info.BlobType)
+	}
 	return nil
 }
 
