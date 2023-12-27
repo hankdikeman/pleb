@@ -1,0 +1,7 @@
+version: '3.7'
+services:
+    horrea:
+        build:
+            context: ./prod/horrea
+        ports:
+            - "5412:5412"

@@ -23,7 +23,7 @@ func CreateBlob(info *pb.BlobInfo) *Blob {
 	blob.content = make([]byte, 0, info.Size)
 	blob.readOnly = false
 	blob.info = info
-        return blob
+	return blob
 }
 
 // Set ReadOnly to block underlying blob mutation.
