@@ -4,4 +4,4 @@ services:
         build:
             context: ./prod/horrea
         ports:
-            - "5412:5412"
+            - "55412:55412"

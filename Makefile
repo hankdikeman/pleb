@@ -43,6 +43,14 @@ all-proto: horrea-proto # pleb-proto fora-proto fabricae-proto caesar-proto sena
 all: horrea pleb fora fabricae caesar senator
 
 ###
+# Local test targets
+###
+
+.PHONY: horrea-test
+horrea-test: horrea
+	go test -C prod/horrea/main ./...
+
+###
 # Dockerfile targets
 ###
 
