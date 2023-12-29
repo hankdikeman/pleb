@@ -26,6 +26,7 @@ import (
 	"github.com/pleb/prod/horrea/main/blob"
 	pb "github.com/pleb/prod/horrea/pb"
 
+	"github.com/caarlos0/env/v10"
 	"google.golang.org/grpc"
 
 	"fmt"
@@ -34,10 +35,15 @@ import (
 	"net"
 )
 
-// TODO below should be configurable (at just boot maybe)
-const CHUNKSIZE = 64 * 1024             // 64 KiB
-const MAXSIZE = 1024 * 1024 * 1024 * 10 // 10 GiB
-const PORT = 55412
+type HorreaConfig struct {
+	Port           int    `env:"H_PORT,required"`
+	ChunkSizeKiB   int    `env:"H_CSIZEKIB"    envDefault:"64"`
+	MaxFileSizeGiB int    `env:"H_FSIZEGIB"    envDefault:"10"`
+	LocalBacked    bool   `env:"H_LOCALBACKED"  envDefault:"false"`
+	LocalDirectory string `env:"H_LOCALDIR"  envDefault:"/tmp/pleb"`
+}
+
+var config = HorreaConfig{}
 
 type server struct {
 	pb.UnimplementedHorreaServer
@@ -102,7 +108,7 @@ func (s *server) GetContent(in *pb.GetContentReq, stream pb.Horrea_GetContentSer
 	}
 
 	// push retrieved data to output
-	iter := blob.CreateBlobIterator(CHUNKSIZE, 0)
+	iter := blob.CreateBlobIterator(config.ChunkSizeKiB, 0)
 	for {
 		// pop additional chunk from blob
 		dataout, err := readBlob.PopChunk(iter)
@@ -120,12 +126,26 @@ func (s *server) GetContent(in *pb.GetContentReq, stream pb.Horrea_GetContentSer
 
 // entrypoint for horrea server.
 func main() {
-	log.Printf("Starting horrea server on port 55412")
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", PORT))
+	// Load config
+	if err := env.Parse(&config); err != nil {
+		panic(err)
+	}
+	log.Printf("%+v\n", config)
+
+	// additional initialization based on config
+	err := blob.ConfigureBackend(config.LocalBacked, config.LocalDirectory)
+	if err != nil {
+		panic(err)
+	}
+
+	// Start listening on server port
+	log.Printf("Starting horrea server on port %d", config.Port)
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", config.Port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
+	// Start gRPC server
 	s := grpc.NewServer()
 	pb.RegisterHorreaServer(s, &server{})
 	log.Printf("server listening at %v", lis.Addr())

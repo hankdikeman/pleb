@@ -9,7 +9,6 @@ import (
 
 	"errors"
 	"fmt"
-	"log"
 )
 
 type Blob struct {
@@ -26,6 +25,8 @@ type BlobIterator struct {
 // Blob-specific errors
 var ErrEndOfBuffer = errors.New("passed end of buffer")
 var ErrReadOnly = errors.New("cannot write, read-only blob")
+var ErrNoExist = errors.New("cannot read, file doesn't exist")
+var ErrNotSupp = errors.New("I/O mode not supported")
 
 // Blob constructor.
 func CreateBlob(info *pb.BlobInfo) *Blob {
@@ -71,38 +72,27 @@ func (blob *Blob) PopChunk(iter *BlobIterator) ([]byte, error) {
 
 // read the content specified by the Blob into the buffer
 func (blob *Blob) ReadContent() error {
-	// TODO fill in file version at least
-	switch blobType := blob.info.BlobType; blobType {
-	case pb.BlobType_Raw:
-		log.Print("No-op RAW read")
-	case pb.BlobType_Tool:
-		log.Print("No-op TOOL read")
-	case pb.BlobType_Input:
-		log.Print("No-op INPUT read")
-	case pb.BlobType_Output:
-		log.Print("No-op OUTPUT read")
-	}
-	return nil
+	major, minor := blob.info.Major, blob.info.Minor
+	blobtype := blob.info.BlobType.String()
+
+	// TODO the file version is simple since all files are
+	//  local and equivalent. The S3-backed version will need
+	//  a subsidiary call to map major/minor to a real ID.
+        var err error
+	blob.content, err = blobReadInternal(major, minor, blobtype)
+	return err
 }
 
 // write the content currently contained in the Blob buffer
 func (blob *Blob) WriteContent() error {
+	major, minor := blob.info.Major, blob.info.Minor
+	blobtype := blob.info.BlobType.String()
+
+	// ReadOnly blobs not allowed to write
 	if blob.readOnly {
 		return ErrReadOnly
 	}
-
-	// TODO fill in file version at least
-	switch blobType := blob.info.BlobType; blobType {
-	case pb.BlobType_Raw:
-		log.Print("No-op RAW write")
-	case pb.BlobType_Tool:
-		log.Print("No-op TOOL write")
-	case pb.BlobType_Input:
-		log.Print("No-op INPUT write")
-	case pb.BlobType_Output:
-		log.Print("No-op OUTPUT write")
-	}
-	return nil
+	return blobWriteInternal(major, minor, blobtype, blob.content)
 }
 
 // return the underlying buffer of the Blob.

@@ -3,5 +3,7 @@ services:
     horrea:
         build:
             context: ./prod/horrea
+        env_file:
+            - ./.env
         ports:
-            - "55412:55412"
+            - ${H_PORT}:${H_PORT}

@@ -60,7 +60,7 @@ horrea-test: horrea
 # builds and launches all docker containers for
 .PHONY: serverup
 serverup: all-proto
-	sudo docker-compose up -d
+	sudo docker-compose up
 
 ###
 # Utility targets
