@@ -72,13 +72,13 @@ func (blob *Blob) PopChunk(iter *BlobIterator) ([]byte, error) {
 
 // read the content specified by the Blob into the buffer
 func (blob *Blob) ReadContent() error {
+	var err error
 	major, minor := blob.info.Major, blob.info.Minor
 	blobtype := blob.info.BlobType.String()
 
 	// TODO the file version is simple since all files are
 	//  local and equivalent. The S3-backed version will need
 	//  a subsidiary call to map major/minor to a real ID.
-        var err error
 	blob.content, err = blobReadInternal(major, minor, blobtype)
 	return err
 }

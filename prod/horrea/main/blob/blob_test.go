@@ -8,6 +8,7 @@ import (
 	pb "github.com/pleb/prod/horrea/pb"
 
 	"fmt"
+	"math/rand"
 	"testing"
 )
 
@@ -66,7 +67,7 @@ func TestBlobBufferIO(t *testing.T) {
 	// create some testdata where byte_i == i % BYTE_MAX
 	testdata := make([]byte, size, size)
 	for b := range testdata {
-		testdata[b] = byte(67)
+		testdata[b] = byte(rand.Intn(256))
 	}
 
 	// append testdata to the blob, should be halfway full
@@ -81,7 +82,7 @@ func TestBlobBufferIO(t *testing.T) {
 
 	// read testdata directly from the blob and compare contents
 	if err = checkBytesEqual(testblob.content, testdata); err != nil {
-		t.Fatalf("testdata and blob buffer content not equal after append, %d", err)
+		t.Fatalf("testdata and blob buffer content not equal after append, %s", err)
 	}
 
 	// use the chunk iterator to do the same, with different chunk sizes
@@ -113,4 +114,52 @@ func TestBlobBufferIO(t *testing.T) {
 		}
 	}
 
+}
+
+func TestBlobReadWrite(t *testing.T) {
+	// create some testdata where byte_i == i % BYTE_MAX
+	size := 1024 * 1024
+	testdata := make([]byte, size, size)
+	for b := range testdata {
+		testdata[b] = byte(rand.Intn(256))
+	}
+
+	// make the blob info struct for blobs
+	ConfigureBackend(true, "/tmp/horrea")
+	blobInfo := &pb.BlobInfo{
+		Size:     int64(size),
+		Major:    fmt.Sprintf("%d", rand.Int()),
+		Minor:    fmt.Sprintf("%d", rand.Int()),
+		BlobType: pb.BlobType_Raw,
+	}
+
+	// fill write blob with the generated data
+	writeblob := CreateBlob(blobInfo)
+	err := writeblob.AppendChunk(testdata)
+	if err != nil {
+		t.Fatalf("blob append returned error: %s", err)
+	}
+
+	// create the readblob and make sure read returns error
+	readblob := CreateBlob(blobInfo)
+	readblob.SetReadOnly()
+	err = readblob.ReadContent()
+	if err == nil {
+		t.Fatalf("expected FileNoEnt: %s", err)
+	}
+
+	// write the data to file and read it back
+	err = writeblob.WriteContent()
+	if err != nil {
+		t.Fatalf("WriteContent returned error: %s", err)
+	}
+	err = readblob.ReadContent()
+	if err != nil {
+		t.Fatalf("ReadContent returned error: %s", err)
+	}
+
+	// make sure the data we read is the same that we wrote
+	if err = checkBytesEqual(readblob.content, testdata); err != nil {
+		t.Fatalf("read content != test data, %s", err)
+	}
 }

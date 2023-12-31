@@ -27,5 +27,5 @@ FROM debian:bullseye AS prod
 COPY --from=build /usr/local/bin/horrea /usr/local/bin/horrea
 
 # Expose working port and set entrypoint command
-EXPOSE 55412
+EXPOSE ${H_PORT}
 ENTRYPOINT ["horrea"]

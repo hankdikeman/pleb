@@ -28,7 +28,7 @@ func ConfigureBackend(localbacked bool, localdirectory string) error {
 
 		// if local directory does not exist, create it
 		log.Printf("Creating local file directory %s", localdirectory)
-		err := os.MkdirAll(localdirectory, 755)
+		err := os.MkdirAll(localdirectory, 0755)
 		if err != nil {
 			return err
 		}
@@ -59,5 +59,5 @@ func blobWriteInternal(major, minor, blobtype string, content []byte) error {
 	}
 	writepath := constructFilePath(major, minor, blobtype)
 	log.Printf("Writing local file content to %s", writepath)
-	return os.WriteFile(writepath, content, 644)
+	return os.WriteFile(writepath, content, 0644)
 }
