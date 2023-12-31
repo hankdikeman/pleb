@@ -1,1 +1,1 @@
-Pleb is an interface for connecting nodes in a network together to do a joint computation
+Pleb is an interface for connecting a local VFS filesystem to a remote filesystem or S3 using gRPC

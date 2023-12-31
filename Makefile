@@ -8,39 +8,49 @@ GRPC-PROTOC := $(PROTOC) --go-grpc_out=./ --go-grpc_opt=paths=source_relative
 # Direct build targets to build standalone binaries
 ###
 
-horrea-proto:
-	$(GRPC-PROTOC) prod/horrea/pb/horrea.proto
-horrea: horrea-proto
-	go build -C prod/horrea/main -o $(BINDIR)/horrea
-
-pleb-proto:
-	$(GRPC-PROTOC) prod/pleb/pb/pleb.proto
-pleb: pleb-proto
-	go build -C prod/pleb/main -o $(BINDIR)/pleb
-
+# distributed KV store for locking, concurrency, service discovery
 fora-proto:
 	$(GRPC-PROTOC) prod/fora/pb/fora.proto
 fora: fora-proto
 	go build -C prod/fora/main -o $(BINDIR)/fora
 
+# slow-access storage frontend
+horrea-proto:
+	$(GRPC-PROTOC) prod/horrea/pb/horrea.proto
+horrea: horrea-proto
+	go build -C prod/horrea/main -o $(BINDIR)/horrea
+
+# fast-access storage frontend
 fabricae-proto:
 	$(GRPC-PROTOC) prod/fabricae/pb/fabricae.proto
 fabricae: fabricae-proto
 	go build -C prod/fabricae/main -o $(BINDIR)/fabricae
 
+# client authentication and server management
 caesar-proto:
 	$(GRPC-PROTOC) prod/caesar/pb/caesar.proto
 caesar: caesar-proto
 	go build -C prod/caesar/main -o $(BINDIR)/caesar
 
+# client-facing file operation service
 senator-proto:
 	$(GRPC-PROTOC) prod/senator/pb/senator.proto
 senator: senator-proto
 	go build -C prod/senator/main -o $(BINDIR)/senator
 
-all-proto: horrea-proto # pleb-proto fora-proto fabricae-proto caesar-proto senator-proto TODO uncomment when all protos done
+# file access concurrency manager
+iudex-proto:
+	$(GRPC-PROTOC) prod/iudex/pb/iudex.proto
+iudex: iudex-proto
+	go build -C prod/iudex/main -o $(BINDIR)/iudex
 
-all: horrea pleb fora fabricae caesar senator
+# client service
+pleb:
+	go build -C prod/pleb/main -o $(BINDIR)/pleb
+
+all-proto: horrea-proto # fora-proto fabricae-proto iudex-proto caesar-proto senator-proto TODO uncomment when all protos done
+
+all: horrea pleb fora fabricae caesar senator iudex
 
 ###
 # Local test targets

@@ -7,7 +7,7 @@ option go_package = "github.com/pleb/prod/horrea/pb";
 import "google/protobuf/empty.proto";
 
 service Horrea {
-    // streamed S3 PUT. No return statement
+    // streamed PUT. No return value
     rpc PutContent(stream PutContentReq) returns (google.protobuf.Empty) {}
 
     // streamed S3 GET.
@@ -22,9 +22,6 @@ message Chunk {
 // Data blob type.
 enum BlobType {
     Raw     = 0;    // Raw data blob.
-    Tool    = 1;    // Job tooling.
-    Input   = 2;    // Job inputs.
-    Output  = 3;    // Job outputs.
 }
 
 // Data blob attributes.

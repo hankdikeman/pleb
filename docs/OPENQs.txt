@@ -1,0 +1,25 @@
+OPEN QUESTIONS
+    PLEB oq:
+            1. should I write this process in C or Go? Need FUSE interface
+            2. can I prepackage this onto a device to ease onboarding?
+
+    SENATOR oq:
+            1. is a single service for all client interactions a good idea? Will it hurt potential to scale?
+            2. what security protocols do I need to support to manage this? Keep data safe across network
+
+    CAESAR oq:
+            1. is authentication enough to justify its own service?
+
+    FORA oq:
+            1. which KV store should I use? And who are major consumers?
+
+    IUDEX oq:
+            1. Is this needed, or can I piggyback on FORA?
+            2. do I need exclusive opens or can multi-reader locking?
+
+    FABRICAE oq:
+            1. what makes sense for a backing for frequently accessed attrs? Simple DB?
+
+    HORREA oq:
+            1. is S3 even appropriate, or will file reads be more common than expected?
+            2. should the data FE maintain its own low-level locking?

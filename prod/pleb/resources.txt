@@ -1,0 +1,9 @@
+FUSE filesystem interfaces:
+    Golang  :   https://github.com/hanwen/go-fuse
+                https://pkg.go.dev/github.com/hanwen/go-fuse/v2/fs
+    C       :   https://github.com/libfuse/libfuse
+
+FUSE performance study: http://libfuse.github.io/doxygen/fast17-vangoor.pdf
+
+Alternative Golang implementation   :   https://github.com/bazil/fuse
+                                        https://pkg.go.dev/bazil.org/fuse#section-readme
