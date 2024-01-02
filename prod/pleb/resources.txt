@@ -7,3 +7,21 @@ FUSE performance study: http://libfuse.github.io/doxygen/fast17-vangoor.pdf
 
 Alternative Golang implementation   :   https://github.com/bazil/fuse
                                         https://pkg.go.dev/bazil.org/fuse#section-readme
+
+Eventually, I would like to do the same but present as a USB device. The FUSE filesystem
+is a first step towards an emulation of a local storage device with a remote backend.
+
+Below are some resources for this:
+    - https://stackoverflow.com/questions/58160492/how-to-emulate-fatfs
+    - https://stackoverflow.com/questions/45254962/how-to-emulate-usb-flash-drive-and-read-data-simultaneous
+    - https://serverfault.com/questions/28430/networked-usb-flash-drive
+        [Question about doing the same, similar cache coherency issues]
+    - https://the-gadgeteer.com/2012/11/03/hsti-wireless-media-stick-review/
+        [FAT32 filesystem emulator from local computer storage. Sort of similar. Uses
+         remounts to dodge host cache consistency]
+
+I'm not sure how I might get multiple clients to be supported though. FAT32 and other local
+filesystems are single-writer as far as I know. So needs more thinking how (or if) I could
+get the remote filestore to look local on the client.
+
+I need some way out of the host caching mechanisms, basically.
