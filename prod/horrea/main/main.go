@@ -1,23 +1,22 @@
 /*
- * Entrypoint for AWS S3 frontend.
+ * Entrypoint for storage frontend server.
  */
 
 /*
- * Serves as a frontend to manage access to S3 object storage
- * for data not suitable for storage in typical KV store.
- * Can also be configured in file mode, where data is stored
- * as files on the local machine rather than at a third-party.
+ * Serves as a frontend for bulk data storage (i.e., everything
+ * which is not file metadata). Can operate in local file mode
+ * or cloud storage mode.
  *
  * Consumers:
- *    Pleb      - reads inputs, pushes outputs
- *    Caesar    - pushes job inputs, manages outputs
+ *    Senator   - Serves file requests, including Reads/Writes
  *
  * Consumes:
- *    Fabricae  - KV store, maps S3 storage -> identifiers
+ *    Iudex     - Guards concurrent file accesses
  *
  * TODO eventually should maintain a caching layer, but this
  * requires some work to shard inputs and will add state to
  * this service. But probably worth it for shared inputs.
+ * TODO the cloud storage aspect is unfinished right now.
  */
 
 package main
@@ -27,6 +26,7 @@ import (
 	pb "github.com/pleb/prod/horrea/pb"
 
 	"github.com/caarlos0/env/v10"
+	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
 	"fmt"
@@ -36,7 +36,7 @@ import (
 )
 
 type HorreaConfig struct {
-	Port           int    `env:"H_PORT,required"`
+	Port           int    `env:"H_PORT"         envDefault:55412`
 	ChunkSizeKiB   int    `env:"H_CSIZEKIB"    envDefault:"64"`
 	MaxFileSizeGiB int    `env:"H_FSIZEGIB"    envDefault:"10"`
 	LocalBacked    bool   `env:"H_LOCALBACKED"  envDefault:"false"`
@@ -70,6 +70,7 @@ func (s *server) PutContent(stream pb.Horrea_PutContentServer) error {
 		if err == io.EOF {
 			break // client done sending
 		} else if err != nil {
+			log.Printf("Error receiving from client, %v", err)
 			return err
 		}
 		// append content to internal buffer
@@ -88,8 +89,10 @@ func (s *server) PutContent(stream pb.Horrea_PutContentServer) error {
 	// push Blob to persistent storage
 	err = writeBlob.WriteContent()
 	if err != nil {
+		log.Printf("Unable to persist received content, %v", err)
 		return err
 	}
+	stream.SendAndClose(&empty.Empty{})
 
 	return nil
 }
@@ -128,14 +131,14 @@ func (s *server) GetContent(in *pb.GetContentReq, stream pb.Horrea_GetContentSer
 func main() {
 	// Load config
 	if err := env.Parse(&config); err != nil {
-		panic(err)
+		log.Fatalf("could not parse environment config: %v", err)
 	}
 	log.Printf("%+v\n", config)
 
 	// additional initialization based on config
 	err := blob.ConfigureBackend(config.LocalBacked, config.LocalDirectory)
 	if err != nil {
-		panic(err)
+		log.Fatalf("failed to init blob backend: %v", err)
 	}
 
 	// Start listening on server port

@@ -100,6 +100,11 @@ func (blob *Blob) GetBuffer() []byte {
 	return blob.content
 }
 
+// return the BlobInfo used to create the blob
+func (blob *Blob) GetBlobInfo() *pb.BlobInfo {
+	return blob.info
+}
+
 // return total capacity of underlying buffer
 func (blob *Blob) GetCapacity() int {
 	return cap(blob.content)
