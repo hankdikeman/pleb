@@ -1,5 +1,6 @@
 ROOTDIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 BINDIR := $(ROOTDIR)/prod/bin
+MOUNTPOINT := /mnt/pleb
 
 PROTOC := protoc --go_out=./ --go_opt=paths=source_relative
 GRPC-PROTOC := $(PROTOC) --go-grpc_out=./ --go-grpc_opt=paths=source_relative
@@ -60,6 +61,10 @@ all: horrea pleb fora fabricae caesar senator iudex
 horrea-test: horrea
 	go test -C prod/horrea/main ./...
 
+.PHONY: pleb-test
+pleb-test: pleb
+	go test -C prod/pleb/main ./...
+
 ###
 # Dockerfile targets
 ###
@@ -79,6 +84,11 @@ serverup: all-proto
 .PHONY: format
 format:
 	gofmt -w -s .
+
+# unmount test mountpoint (defaults to /mnt/pleb)
+.PHONY: unmount
+unmount:
+	sudo umount -l $(MOUNTPOINT) || /bin/true
 
 # remove all generated proto files and binaries
 .PHONY: clean
