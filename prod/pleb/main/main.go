@@ -5,9 +5,13 @@
 package main
 
 import (
+	// "github.com/pleb/prod/pleb/main/netclient"
+
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
 	"github.com/caarlos0/env/v10"
+	// "google.golang.org/grpc"
+	// "google.golang.org/grpc/credentials/insecure"
 
 	"context"
 	"log"

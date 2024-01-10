@@ -49,7 +49,7 @@ iudex: iudex-proto
 pleb:
 	go build -C prod/pleb/main -o $(BINDIR)/pleb
 
-all-proto: horrea-proto # fora-proto fabricae-proto iudex-proto caesar-proto senator-proto TODO uncomment when all protos done
+all-proto: horrea-proto fora-proto fabricae-proto iudex-proto caesar-proto senator-proto
 
 all: horrea pleb fora fabricae caesar senator iudex
 
@@ -72,10 +72,10 @@ pleb-test: pleb
 # TODO not sure if I need these yet but would be like: `sudo docker build -t [x]-server prod/[x]`
 # I don't know what testing I would need the actual image for. Maybe grander component tests?
 
-# builds and launches all docker containers for
+# builds and launches all docker containers for remote filesystem
 .PHONY: serverup
 serverup: all-proto
-	sudo docker-compose up
+	sudo docker-compose up --build
 
 ###
 # Utility targets

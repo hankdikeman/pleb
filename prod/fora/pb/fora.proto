@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package fora;
+
+option go_package = "github.com/pleb/prod/fora/pb";
+
+service Fora {
+}

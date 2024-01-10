@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package caesar;
+
+option go_package = "github.com/pleb/prod/caesar/pb";
+
+service Caesar {
+}

@@ -7,3 +7,38 @@ services:
             - ./.env
         ports:
             - ${H_PORT}:${H_PORT}
+    caesar:
+        build:
+            context: ./prod/caesar
+        env_file:
+            - ./.env
+        ports:
+            - ${C_PORT}:${C_PORT}
+    iudex:
+        build:
+            context: ./prod/iudex
+        env_file:
+            - ./.env
+        ports:
+            - ${I_PORT}:${I_PORT}
+    fora:
+        build:
+            context: ./prod/fora
+        env_file:
+            - ./.env
+        ports:
+            - ${FO_PORT}:${FO_PORT}
+    fabricae:
+        build:
+            context: ./prod/fabricae
+        env_file:
+            - ./.env
+        ports:
+            - ${FA_PORT}:${FA_PORT}
+    senator:
+        build:
+            context: ./prod/senator
+        env_file:
+            - ./.env
+        ports:
+            - ${S_PORT}:${S_PORT}

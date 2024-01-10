@@ -29,10 +29,13 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
+	"context"
 	"fmt"
 	"io"
 	"log"
 	"net"
+	"os/signal"
+	"syscall"
 )
 
 type HorreaConfig struct {
@@ -135,6 +138,14 @@ func main() {
 	}
 	log.Printf("%+v\n", config)
 
+	// watch for shutdown signals (XXX) needs to be in common package
+	ctx, stop := signal.NotifyContext(
+		context.Background(),
+		syscall.SIGINT,
+		syscall.SIGTERM,
+	)
+	defer stop()
+
 	// additional initialization based on config
 	err := blob.ConfigureBackend(config.LocalBacked, config.LocalDirectory)
 	if err != nil {
@@ -150,9 +161,16 @@ func main() {
 
 	// Start gRPC server
 	s := grpc.NewServer()
-	pb.RegisterHorreaServer(s, &server{})
-	log.Printf("server listening at %v", lis.Addr())
-	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
+	go func() {
+		pb.RegisterHorreaServer(s, &server{})
+		log.Printf("server listening at %v", lis.Addr())
+		if err := s.Serve(lis); err != nil {
+			log.Fatalf("failed to serve: %v", err)
+		}
+	}()
+
+	// block on program exit
+	<-ctx.Done()
+	log.Printf("shutting down horrea server")
+	s.GracefulStop()
 }

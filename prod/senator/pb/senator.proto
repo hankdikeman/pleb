@@ -1,0 +1,105 @@
+syntax = "proto3";
+
+package senator;
+
+option go_package = "github.com/pleb/prod/senator/pb";
+
+service Senator {
+    /*
+     * TODO start with basic NFSv3 APIs
+     */
+
+    // filesystem attribute APIs
+    rpc StatFS(StatFSReq) returns (StatFSRes) {}
+
+    // metadata access APIs
+    rpc GetAttr(GetAttrReq) returns (GetAttrRes) {}
+    rpc SetAttr(SetAttrReq) returns (SetAttrRes) {}
+
+    // file create/delete APIs
+    rpc Create(CreateReq) returns (CreateRes) {}
+    rpc Remove(RemoveReq) returns (RemoveRes) {}
+    rpc Rename(RenameReq) returns (RenameRes) {}
+
+    // file access APIs
+    rpc Lookup(LookupReq) returns (LookupRes) {}
+
+    // file I/O APIs
+    rpc Read(ReadReq) returns (ReadRes) {}
+    rpc Write(WriteReq) returns (WriteRes) {}
+    rpc Commit(CommitReq) returns (CommitRes) {}
+
+    // directory APIs
+    rpc Mkdir(MkdirReq) returns (MkdirRes) {}
+    rpc Rmdir(RmdirReq) returns (RmdirRes) {}
+    rpc Readdir(ReaddirReq) returns (ReaddirRes) {}
+}
+
+message Handle {
+    uint64 identifier = 1;
+}
+
+message StatFSReq {
+}
+message StatFSRes {
+}
+
+message SetAttrReq {
+}
+message SetAttrRes {
+}
+
+message GetAttrReq {
+}
+message GetAttrRes {
+}
+
+message CreateReq {
+}
+message CreateRes {
+}
+
+message RemoveReq {
+}
+message RemoveRes {
+}
+
+message RenameReq {
+}
+message RenameRes {
+}
+
+message LookupReq {
+}
+message LookupRes {
+}
+
+message ReadReq {
+}
+message ReadRes {
+}
+
+message WriteReq {
+}
+message WriteRes {
+}
+
+message CommitReq {
+}
+message CommitRes {
+}
+
+message MkdirReq {
+}
+message MkdirRes {
+}
+
+message RmdirReq {
+}
+message RmdirRes {
+}
+
+message ReaddirReq {
+}
+message ReaddirRes {
+}

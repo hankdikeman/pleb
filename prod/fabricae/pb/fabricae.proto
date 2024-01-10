@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package fabricae;
+
+option go_package = "github.com/pleb/prod/fabricae/pb";
+
+service Fabricae {
+}
