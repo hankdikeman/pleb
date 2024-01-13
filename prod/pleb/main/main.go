@@ -7,6 +7,7 @@ package main
 import (
 	// "github.com/pleb/prod/pleb/main/netclient"
 
+	"github.com/pleb/prod/common/bootstrap"
 	"github.com/pleb/prod/common/config"
 
 	"bazil.org/fuse"
@@ -17,7 +18,6 @@ import (
 	"context"
 	"log"
 	"os"
-	"os/signal"
 	"syscall"
 )
 
@@ -81,49 +81,46 @@ func (f File) ReadAll(ctx context.Context) ([]byte, error) {
 
 // main method. mounts and starts serving on FUSE filesystem
 func main() {
-	config.LoadConfig(&cfg, cfgPrefix)
+	var conn *fuse.Conn
 
-	// TODO do authentication to remote FS
-
-	cnxn, err := fuse.Mount(
-		cfg.MountPoint,
-		fuse.FSName("pleb"),
-		fuse.Subtype("plebfs"),
+	bootstrap.RunDaemon(
+		func() error {
+			var err error
+			config.LoadConfig(&cfg, cfgPrefix)
+			conn, err = fuse.Mount(
+				cfg.MountPoint,
+				fuse.FSName("pleb"),
+				fuse.Subtype("plebfs"),
+			)
+			if err != nil {
+				log.Printf("Could not mount %s: %v", cfg.MountPoint, err)
+			}
+			return err
+		},
+		func(done context.CancelFunc) {
+			defer done()
+			log.Printf("serving FS at %s", cfg.MountPoint)
+			err := fs.Serve(conn, FS{})
+			if err != nil {
+				log.Printf("error serving filesystem: %v", err)
+			}
+		},
+		func() {
+			log.Printf("shutting down, unmounting %s", cfg.MountPoint)
+			err := fuse.Unmount(cfg.MountPoint)
+			if err != nil {
+				/*
+				 * (XXX) this is not good enough. with the
+				 * mountpoint active, conn.CLose() will hang
+				 */
+				log.Printf("could not unmount mountpoint %s: %v",
+					cfg.MountPoint, err)
+			}
+			err = conn.Close()
+			if err != nil {
+				log.Printf("could not close FUSE connection: %v", err)
+			}
+			log.Printf("closed connection, exiting")
+		},
 	)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// watch for shutdown signals
-	ctx, stop := signal.NotifyContext(
-		context.Background(),
-		syscall.SIGINT,
-		syscall.SIGTERM,
-	)
-	defer stop()
-
-	// start FUSE server in separate thread
-	log.Printf("serving FS at %s", cfg.MountPoint)
-	go func(cnxn *fuse.Conn) {
-		err = fs.Serve(cnxn, FS{})
-		if err != nil {
-			log.Printf("error serving filesystem: %v", err)
-		}
-	}(cnxn)
-
-	// block on program exit
-	<-ctx.Done()
-
-	// shut down filesystem once program exits
-	log.Printf("shutting down, unmounting %s", cfg.MountPoint)
-	err = fuse.Unmount(cfg.MountPoint)
-	if err != nil {
-		log.Printf("could not unmount mountpoint %s: %v",
-			cfg.MountPoint, err)
-	}
-	err = cnxn.Close()
-	if err != nil {
-		log.Printf("could not close FUSE connection: %v", err)
-	}
-	log.Printf("closed connection, exiting")
 }
