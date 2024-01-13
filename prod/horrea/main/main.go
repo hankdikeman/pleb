@@ -25,7 +25,8 @@ import (
 	"github.com/pleb/prod/horrea/main/blob"
 	pb "github.com/pleb/prod/horrea/pb"
 
-	"github.com/caarlos0/env/v10"
+	"github.com/pleb/prod/common/config"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
@@ -39,14 +40,16 @@ import (
 )
 
 type HorreaConfig struct {
-	Port           int    `env:"H_PORT"         envDefault:55412`
-	ChunkSizeKiB   int    `env:"H_CSIZEKIB"    envDefault:"64"`
-	MaxFileSizeGiB int    `env:"H_FSIZEGIB"    envDefault:"10"`
-	LocalBacked    bool   `env:"H_LOCALBACKED"  envDefault:"false"`
-	LocalDirectory string `env:"H_LOCALDIR"  envDefault:"/tmp/pleb"`
+	Port           int    `env:"PORT"         envDefault:55412`
+	ChunkSizeKiB   int    `env:"CSIZEKIB"    envDefault:"64"`
+	MaxFileSizeGiB int    `env:"FSIZEGIB"    envDefault:"10"`
+	LocalBacked    bool   `env:"LOCALBACKED"  envDefault:"false"`
+	LocalDirectory string `env:"LOCALDIR"  envDefault:"/tmp/pleb"`
 }
 
-var config = HorreaConfig{}
+const cfgPrefix = "HORREA_"
+
+var cfg = HorreaConfig{}
 
 type server struct {
 	pb.UnimplementedHorreaServer
@@ -114,7 +117,7 @@ func (s *server) GetContent(in *pb.GetContentReq, stream pb.Horrea_GetContentSer
 	}
 
 	// push retrieved data to output
-	iter := blob.CreateBlobIterator(config.ChunkSizeKiB, 0)
+	iter := blob.CreateBlobIterator(cfg.ChunkSizeKiB, 0)
 	for {
 		// pop additional chunk from blob
 		dataout, err := readBlob.PopChunk(iter)
@@ -132,11 +135,7 @@ func (s *server) GetContent(in *pb.GetContentReq, stream pb.Horrea_GetContentSer
 
 // entrypoint for horrea server.
 func main() {
-	// Load config
-	if err := env.Parse(&config); err != nil {
-		log.Fatalf("could not parse environment config: %v", err)
-	}
-	log.Printf("%+v\n", config)
+	config.LoadConfig(&cfg, cfgPrefix)
 
 	// watch for shutdown signals (XXX) needs to be in common package
 	ctx, stop := signal.NotifyContext(
@@ -147,14 +146,14 @@ func main() {
 	defer stop()
 
 	// additional initialization based on config
-	err := blob.ConfigureBackend(config.LocalBacked, config.LocalDirectory)
+	err := blob.ConfigureBackend(cfg.LocalBacked, cfg.LocalDirectory)
 	if err != nil {
 		log.Fatalf("failed to init blob backend: %v", err)
 	}
 
 	// Start listening on server port
-	log.Printf("Starting horrea server on port %d", config.Port)
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", config.Port))
+	log.Printf("Starting horrea server on port %d", cfg.Port)
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.Port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

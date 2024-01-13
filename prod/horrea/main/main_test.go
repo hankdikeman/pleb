@@ -8,7 +8,8 @@ import (
 	"github.com/pleb/prod/horrea/main/blob"
 	pb "github.com/pleb/prod/horrea/pb"
 
-	"github.com/caarlos0/env/v10"
+	"github.com/pleb/prod/common/config"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
@@ -50,9 +51,7 @@ func startTestServer(ctx context.Context) (pb.HorreaClient, func()) {
 	lis := bufconn.Listen(buffer)
 
 	// do server configuration and backend setup
-	if err := env.Parse(&config); err != nil {
-		log.Fatalf("failed to parse environment config: %v", err)
-	}
+	config.LoadConfig(&cfg, cfgPrefix)
 	err := blob.ConfigureBackend(true, "/tmp/horrea-test")
 	if err != nil {
 		log.Fatalf("failed to configure backend: %v", err)

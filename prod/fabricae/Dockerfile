@@ -11,7 +11,7 @@ WORKDIR /usr/src/app
 
 # Copy and build server code
 COPY . .
-RUN go build -C ./main -v -o /usr/local/bin/fabricae .
+RUN go build -C ./prod/fabricae/main -v -o /usr/local/bin/fabricae .
 
 ###
 # PRODUCTION STAGE
@@ -22,5 +22,5 @@ FROM debian:bullseye AS prod
 COPY --from=build /usr/local/bin/fabricae /usr/local/bin/fabricae
 
 # Expose working port and set entrypoint command
-EXPOSE ${FA_PORT}
+EXPOSE ${FABRICAE_PORT}
 ENTRYPOINT ["fabricae"]

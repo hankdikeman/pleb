@@ -7,7 +7,8 @@ package main
 import (
 	pb "github.com/pleb/prod/caesar/pb"
 
-	"github.com/caarlos0/env/v10"
+	"github.com/pleb/prod/common/config"
+
 	"google.golang.org/grpc"
 
 	"context"
@@ -19,10 +20,12 @@ import (
 )
 
 type CaesarConfig struct {
-	Port int `env:"C_PORT"         envDefault:55413`
+	Port int `env:"PORT"         envDefault:55413`
 }
 
-var config = CaesarConfig{}
+const cfgPrefix = "CAESAR_"
+
+var cfg = CaesarConfig{}
 
 type server struct {
 	pb.UnimplementedCaesarServer
@@ -30,11 +33,7 @@ type server struct {
 
 // entrypoint for caesar server.
 func main() {
-	// Load config
-	if err := env.Parse(&config); err != nil {
-		log.Fatalf("could not parse environment config: %v", err)
-	}
-	log.Printf("%+v\n", config)
+	config.LoadConfig(&cfg, cfgPrefix)
 
 	// watch for shutdown signals (XXX) needs to be in common package
 	ctx, stop := signal.NotifyContext(
@@ -45,8 +44,8 @@ func main() {
 	defer stop()
 
 	// Start listening on server port
-	log.Printf("Starting caesar server on port %d", config.Port)
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", config.Port))
+	log.Printf("Starting caesar server on port %d", cfg.Port)
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.Port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

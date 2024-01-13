@@ -16,7 +16,7 @@ WORKDIR /usr/src/app
 
 # Copy and build server code
 COPY . .
-RUN go build -C ./main -v -o /usr/local/bin/horrea .
+RUN go build -C ./prod/horrea/main -v -o /usr/local/bin/horrea .
 
 ###
 # PRODUCTION STAGE
@@ -27,5 +27,5 @@ FROM debian:bullseye AS prod
 COPY --from=build /usr/local/bin/horrea /usr/local/bin/horrea
 
 # Expose working port and set entrypoint command
-EXPOSE ${H_PORT}
+EXPOSE ${HORREA_PORT}
 ENTRYPOINT ["horrea"]

@@ -7,7 +7,8 @@ package main
 import (
 	pb "github.com/pleb/prod/fora/pb"
 
-	"github.com/caarlos0/env/v10"
+	"github.com/pleb/prod/common/config"
+
 	"google.golang.org/grpc"
 
 	"context"
@@ -19,10 +20,12 @@ import (
 )
 
 type ForaConfig struct {
-	Port int `env:"FO_PORT"         envDefault:55415`
+	Port int `env:"PORT"         envDefault:55415`
 }
 
-var config = ForaConfig{}
+const cfgPrefix = "FORA_"
+
+var cfg = ForaConfig{}
 
 type server struct {
 	pb.UnimplementedForaServer
@@ -30,11 +33,7 @@ type server struct {
 
 // entrypoint for fora server.
 func main() {
-	// Load config
-	if err := env.Parse(&config); err != nil {
-		log.Fatalf("could not parse environment config: %v", err)
-	}
-	log.Printf("%+v\n", config)
+	config.LoadConfig(&cfg, cfgPrefix)
 
 	// watch for shutdown signals (XXX) needs to be in common package
 	ctx, stop := signal.NotifyContext(
@@ -45,8 +44,8 @@ func main() {
 	defer stop()
 
 	// Start listening on server port
-	log.Printf("Starting fora server on port %d", config.Port)
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", config.Port))
+	log.Printf("Starting fora server on port %d", cfg.Port)
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.Port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

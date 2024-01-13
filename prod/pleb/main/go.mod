@@ -5,6 +5,7 @@ go 1.21.4
 require (
 	bazil.org/fuse v0.0.0-20230120002735-62a210ff1fd5
 	github.com/caarlos0/env/v10 v10.0.0
+	github.com/pleb/prod/common/config v0.0.0-00010101000000-000000000000
 	github.com/pleb/prod/senator/pb v0.0.0-00010101000000-000000000000
 	google.golang.org/grpc v1.60.1
 )
@@ -19,3 +20,5 @@ require (
 )
 
 replace github.com/pleb/prod/senator/pb => ../../senator/pb
+
+replace github.com/pleb/prod/common/config => ../../common/config

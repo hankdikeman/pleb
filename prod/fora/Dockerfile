@@ -11,7 +11,7 @@ WORKDIR /usr/src/app
 
 # Copy and build server code
 COPY . .
-RUN go build -C ./main -v -o /usr/local/bin/fora .
+RUN go build -C ./prod/fora/main -v -o /usr/local/bin/fora .
 
 ###
 # PRODUCTION STAGE
@@ -22,5 +22,5 @@ FROM debian:bullseye AS prod
 COPY --from=build /usr/local/bin/fora /usr/local/bin/fora
 
 # Expose working port and set entrypoint command
-EXPOSE ${F_PORT}
+EXPOSE ${FORA_PORT}
 ENTRYPOINT ["fora"]

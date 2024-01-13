@@ -11,7 +11,7 @@ WORKDIR /usr/src/app
 
 # Copy and build server code
 COPY . .
-RUN go build -C ./main -v -o /usr/local/bin/iudex .
+RUN go build -C ./prod/iudex/main -v -o /usr/local/bin/iudex .
 
 ###
 # PRODUCTION STAGE
@@ -22,5 +22,5 @@ FROM debian:bullseye AS prod
 COPY --from=build /usr/local/bin/iudex /usr/local/bin/iudex
 
 # Expose working port and set entrypoint command
-EXPOSE ${I_PORT}
+EXPOSE ${IUDEX_PORT}
 ENTRYPOINT ["iudex"]

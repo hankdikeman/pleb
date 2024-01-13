@@ -2,43 +2,49 @@ version: '3.7'
 services:
     horrea:
         build:
-            context: ./prod/horrea
+            context: .
+            dockerfile: ./prod/horrea/Dockerfile
         env_file:
             - ./.env
         ports:
-            - ${H_PORT}:${H_PORT}
+            - ${HORREA_PORT}:${HORREA_PORT}
     caesar:
         build:
-            context: ./prod/caesar
+            context: .
+            dockerfile: ./prod/caesar/Dockerfile
         env_file:
             - ./.env
         ports:
-            - ${C_PORT}:${C_PORT}
+            - ${CAESAR_PORT}:${CAESAR_PORT}
     iudex:
         build:
-            context: ./prod/iudex
+            context: .
+            dockerfile: ./prod/iudex/Dockerfile
         env_file:
             - ./.env
         ports:
-            - ${I_PORT}:${I_PORT}
+            - ${IUDEX_PORT}:${IUDEX_PORT}
     fora:
         build:
-            context: ./prod/fora
+            context: .
+            dockerfile: ./prod/fora/Dockerfile
         env_file:
             - ./.env
         ports:
-            - ${FO_PORT}:${FO_PORT}
+            - ${FORA_PORT}:${FORA_PORT}
     fabricae:
         build:
-            context: ./prod/fabricae
+            context: .
+            dockerfile: ./prod/fabricae/Dockerfile
         env_file:
             - ./.env
         ports:
-            - ${FA_PORT}:${FA_PORT}
+            - ${FABRICAE_PORT}:${FABRICAE_PORT}
     senator:
         build:
-            context: ./prod/senator
+            context: .
+            dockerfile: ./prod/senator/Dockerfile
         env_file:
             - ./.env
         ports:
-            - ${S_PORT}:${S_PORT}
+            - ${SENATOR_PORT}:${SENATOR_PORT}

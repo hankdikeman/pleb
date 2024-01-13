@@ -11,7 +11,7 @@ WORKDIR /usr/src/app
 
 # Copy and build server code
 COPY . .
-RUN go build -C ./main -v -o /usr/local/bin/caesar .
+RUN go build -C ./prod/caesar/main -v -o /usr/local/bin/caesar .
 
 ###
 # PRODUCTION STAGE
@@ -22,5 +22,5 @@ FROM debian:bullseye AS prod
 COPY --from=build /usr/local/bin/caesar /usr/local/bin/caesar
 
 # Expose working port and set entrypoint command
-EXPOSE ${C_PORT}
+EXPOSE ${CAESAR_PORT}
 ENTRYPOINT ["caesar"]

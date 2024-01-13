@@ -7,9 +7,10 @@ package main
 import (
 	// "github.com/pleb/prod/pleb/main/netclient"
 
+	"github.com/pleb/prod/common/config"
+
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
-	"github.com/caarlos0/env/v10"
 	// "google.golang.org/grpc"
 	// "google.golang.org/grpc/credentials/insecure"
 
@@ -21,10 +22,12 @@ import (
 )
 
 type PlebConfig struct {
-	MountPoint string `env:"P_MOUNTPOINT"  envDefault:"/mnt/pleb"`
+	MountPoint string `env:"MOUNTPOINT"  envDefault:"/mnt/pleb"`
 }
 
-var config = PlebConfig{}
+const cfgPrefix = "PLEB_"
+
+var cfg = PlebConfig{}
 
 // filesystem structure. matches interface fs.FS
 type FS struct{}
@@ -78,16 +81,12 @@ func (f File) ReadAll(ctx context.Context) ([]byte, error) {
 
 // main method. mounts and starts serving on FUSE filesystem
 func main() {
-	// Load config
-	if err := env.Parse(&config); err != nil {
-		log.Fatalf("could not parse environment config: %v", err)
-	}
-	log.Printf("%+v\n", config)
+	config.LoadConfig(&cfg, cfgPrefix)
 
 	// TODO do authentication to remote FS
 
 	cnxn, err := fuse.Mount(
-		config.MountPoint,
+		cfg.MountPoint,
 		fuse.FSName("pleb"),
 		fuse.Subtype("plebfs"),
 	)
@@ -104,7 +103,7 @@ func main() {
 	defer stop()
 
 	// start FUSE server in separate thread
-	log.Printf("serving FS at %s", config.MountPoint)
+	log.Printf("serving FS at %s", cfg.MountPoint)
 	go func(cnxn *fuse.Conn) {
 		err = fs.Serve(cnxn, FS{})
 		if err != nil {
@@ -116,11 +115,11 @@ func main() {
 	<-ctx.Done()
 
 	// shut down filesystem once program exits
-	log.Printf("shutting down, unmounting %s", config.MountPoint)
-	err = fuse.Unmount(config.MountPoint)
+	log.Printf("shutting down, unmounting %s", cfg.MountPoint)
+	err = fuse.Unmount(cfg.MountPoint)
 	if err != nil {
 		log.Printf("could not unmount mountpoint %s: %v",
-			config.MountPoint, err)
+			cfg.MountPoint, err)
 	}
 	err = cnxn.Close()
 	if err != nil {

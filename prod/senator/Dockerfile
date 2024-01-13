@@ -11,7 +11,7 @@ WORKDIR /usr/src/app
 
 # Copy and build server code
 COPY . .
-RUN go build -C ./main -v -o /usr/local/bin/senator .
+RUN go build -C ./prod/senator/main -v -o /usr/local/bin/senator .
 
 ###
 # PRODUCTION STAGE
@@ -22,5 +22,5 @@ FROM debian:bullseye AS prod
 COPY --from=build /usr/local/bin/senator /usr/local/bin/senator
 
 # Expose working port and set entrypoint command
-EXPOSE ${S_PORT}
+EXPOSE ${SENATOR_PORT}
 ENTRYPOINT ["senator"]
