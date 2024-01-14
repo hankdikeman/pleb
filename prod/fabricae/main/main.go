@@ -7,6 +7,7 @@ package main
 import (
 	pb "github.com/pleb/prod/fabricae/pb"
 
+	"github.com/pleb/prod/common/bootstrap"
 	"github.com/pleb/prod/common/config"
 
 	"google.golang.org/grpc"
@@ -15,8 +16,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"os/signal"
-	"syscall"
 )
 
 type FabricaeConfig struct {
@@ -25,43 +24,46 @@ type FabricaeConfig struct {
 
 const cfgPrefix = "FABRICAE_"
 
-var cfg = FabricaeConfig{}
+var (
+	cfg = FabricaeConfig{}
+	srv = grpc.NewServer()
+)
 
 type server struct {
 	pb.UnimplementedFabricaeServer
 }
 
-// entrypoint for fabricae server.
-func main() {
+// load configuration
+func setup() error {
 	config.LoadConfig(&cfg, cfgPrefix)
+	return nil
+}
 
-	// watch for shutdown signals (XXX) needs to be in common package
-	ctx, stop := signal.NotifyContext(
-		context.Background(),
-		syscall.SIGINT,
-		syscall.SIGTERM,
-	)
-	defer stop()
-
-	// Start listening on server port
+// run gRPC server and wait for shutdown
+func run(done context.CancelFunc) {
+	defer done()
 	log.Printf("Starting fabricae server on port %d", cfg.Port)
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.Port))
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		log.Printf("failed to listen: %v", err)
+		return
 	}
+	defer lis.Close()
+	pb.RegisterFabricaeServer(srv, &server{})
+	log.Printf("server listening at %v", lis.Addr())
+	if err := srv.Serve(lis); err != nil {
+		log.Printf("failed to serve: %v", err)
+		return
+	}
+}
 
-	// Start gRPC server
-	s := grpc.NewServer()
-	go func() {
-		pb.RegisterFabricaeServer(s, &server{})
-		log.Printf("server listening at %v", lis.Addr())
-		if err := s.Serve(lis); err != nil {
-			log.Fatalf("failed to serve: %v", err)
-		}
-	}()
-
-	// block on program exit
-	<-ctx.Done()
+// gracefully stop server
+func shutdown() {
 	log.Printf("shutting down fabricae server")
-	s.GracefulStop()
+	srv.GracefulStop()
+}
+
+// entrypoint for fabricae server.
+func main() {
+	bootstrap.RunDaemon(setup, run, shutdown)
 }

@@ -4,6 +4,7 @@ go 1.21.4
 
 require (
 	github.com/golang/protobuf v1.5.3
+	github.com/pleb/prod/common/bootstrap v0.0.0-00010101000000-000000000000
 	github.com/pleb/prod/common/config v0.0.0-00010101000000-000000000000
 	github.com/pleb/prod/horrea/pb v0.0.0-00010101000000-000000000000
 	google.golang.org/grpc v1.60.1
@@ -21,3 +22,5 @@ require (
 replace github.com/pleb/prod/horrea/pb => ../pb
 
 replace github.com/pleb/prod/common/config => ../../common/config
+
+replace github.com/pleb/prod/common/bootstrap => ../../common/bootstrap
