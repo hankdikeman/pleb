@@ -23,6 +23,65 @@ import (
 	"testing"
 )
 
+// setup the unit test. unit tests hardset to local mode
+func setupTest() error {
+	config.LoadConfig(&cfg, cfgPrefix)
+	err := blob.ConfigureBackend(true, "/tmp/horrea-test")
+	if err != nil {
+		log.Fatalf("failed to configure backend: %v", err)
+	}
+	return err
+}
+
+// returns closure function to run server with given listener
+func runServer(listener *bufconn.Listener) {
+            // start test server on provided listener
+		srv = grpc.NewServer()
+		pb.RegisterHorreaServer(srv, &server{})
+		if err := srv.Serve(listener); err != nil {
+			log.Fatalf("failed to serve: %v", err)
+		}
+}
+
+// returns closure function to shutdown server on given listener
+func createCloserFunc(listener *bufconn.Listener) func() {
+	return func() {
+		if err := listener.Close(); err != nil {
+			log.Fatalf("error closing listener: %v", err)
+		}
+		srv.Stop()
+	}
+}
+
+// start a test server and return a client + server stop function
+func startTestServer(ctx context.Context) (pb.HorreaClient, func()) {
+        // setup backend and config for test
+        if err := setupTest() ; err != nil {
+            log.Fatalf("could not setup test: %v", err)
+        }
+
+        // run server against buffered network listener
+	bufsize := 10 * 1024 * 1024
+        listener := bufconn.Listen(bufsize)
+        go runServer(listener)
+
+	// dial local buffered network context
+	conn, err := grpc.DialContext(ctx,
+		"",
+		grpc.WithContextDialer(
+			func(context.Context, string) (net.Conn, error) {
+				return listener.Dial()
+			}),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Fatalf("error connecting to server: %v", err)
+	}
+	client := pb.NewHorreaClient(conn)
+
+	return client, createCloserFunc(listener)
+}
+
 // make a data blob for test purposes
 func makeTestBlob(size, major, minor int) *blob.Blob {
 	// create pseudorandom data
@@ -44,60 +103,9 @@ func makeTestBlob(size, major, minor int) *blob.Blob {
 	return testblob
 }
 
-// start a test server and return a client + server stop function
-func startTestServer(ctx context.Context) (pb.HorreaClient, func()) {
-	// create a local buffer to emulate network
-	buffer := 1024 * 1024 * 10
-	lis := bufconn.Listen(buffer)
-
-	// do server configuration and backend setup
-	config.LoadConfig(&cfg, cfgPrefix)
-	err := blob.ConfigureBackend(true, "/tmp/horrea-test")
-	if err != nil {
-		log.Fatalf("failed to configure backend: %v", err)
-	}
-
-	// register gRPC test server
-	s := grpc.NewServer()
-	pb.RegisterHorreaServer(s, &server{})
-
-	// start separate server thread
-	go func() {
-		if err := s.Serve(lis); err != nil {
-			log.Printf("failed to serve: %v", err)
-		}
-	}()
-
-	// dial local buffered network context
-	conn, err := grpc.DialContext(ctx,
-		"",
-		grpc.WithContextDialer(
-			func(context.Context, string) (net.Conn, error) {
-				return lis.Dial()
-			}),
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
-	if err != nil {
-		log.Fatalf("error connecting to server: %v", err)
-	}
-
-	// create anonymous server shutdown function and client
-	closer := func() {
-		err := lis.Close()
-		if err != nil {
-			log.Printf("error closing listener: %v", err)
-		}
-		s.Stop()
-	}
-	client := pb.NewHorreaClient(conn)
-
-	return client, closer
-}
-
 // just test server startup logic, but don't submit client calls
 func TestHorreaServerStartup(t *testing.T) {
 	ctx := context.Background()
-
 	_, closer := startTestServer(ctx)
 	defer closer()
 }
